@@ -3,4 +3,8 @@
 A demo of dynamic terrain within ROS/Gazebo environment
 
 # requirements
-TODO: List any requirements
+
+Required Packages:
+  - ros-melodic-husky-desktop
+  - ros-melodic-huskey-simulator
+  - ros-melodic-teleop-twist-keyboard

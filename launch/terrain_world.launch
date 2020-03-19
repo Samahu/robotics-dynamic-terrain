@@ -20,4 +20,13 @@
     <arg name="debug" value="$(arg debug)"/>
   </include>
 
+  <include file="$(find husky_gazebo)/launch/spawn_husky.launch">
+    <arg name="x" default="300"/>
+    <arg name="y" default="-300"/>
+    <arg name="z" default="1.0"/>
+    <arg name="yaw" default="0.0"/>
+    <arg name="laser_enabled" value="false"/>
+    <arg name="kinect_enabled" value="false"/>
+  </include>
+
 </launch>

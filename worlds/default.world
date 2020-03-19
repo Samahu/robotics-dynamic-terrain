@@ -2,6 +2,12 @@
 <sdf version="1.4">
   <world name="default">
     <!-- A global light source -->
+    <gui>
+      <camera name="user_camera">
+        <pose>295 -295 3 0 0.25 -0.5</pose>
+      </camera>
+    </gui>
+
     <include>
       <uri>model://sun</uri>
     </include>
