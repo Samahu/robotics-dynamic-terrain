@@ -14,7 +14,7 @@
         <collision name="collision">
           <geometry>
             <heightmap>
-              <uri>file://mtsthelens_513x513.dem</uri>
+              <uri>file://heightmaps/mtsthelens_513x513.dem</uri>
               <size>150 150 50</size>
               <pos>0 0 -685</pos>
             </heightmap>
@@ -47,7 +47,7 @@
                 <min_height>4</min_height>
                 <fade_dist>5</fade_dist>
               </blend>
-              <uri>file://mtsthelens_513x513.dem</uri>
+              <uri>file://heightmaps/mtsthelens_513x513.dem</uri>
               <size>150 150 50</size>
               <pos>0 0 -685</pos>
             </heightmap>

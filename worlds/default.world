@@ -4,12 +4,18 @@
     <!-- A global light source -->
     <gui>
       <camera name="user_camera">
-        <pose>295 -295 3 0 0.25 -0.5</pose>
+        <pose>298 -267 4.5 0 0.25 -0.5</pose>
       </camera>
     </gui>
 
     <include>
       <uri>model://sun</uri>
+    </include>
+
+    <include>
+      <uri>file://models/gas_station</uri>
+      <name>gas_station</name>
+      <pose>330 -290 0 0 0 3.14</pose>
     </include>
 
     <model name="heightmap">
