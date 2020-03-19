@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <sdf version="1.4">
   <world name="default">
-    <!-- A global light source -->
+
     <gui>
       <camera name="user_camera">
         <pose>298 -267 4.5 0 0.25 -0.5</pose>
@@ -64,6 +64,9 @@
               <pos>0 0 0</pos>
             </heightmap>
           </geometry>
+
+          <plugin name="dynamic_terrain" filename="libdynamic_terrain.so"/>
+
         </visual>
 
       </link>
