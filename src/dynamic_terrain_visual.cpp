@@ -10,16 +10,12 @@
 
 namespace gazebo
 {
-    class DynamicTerrain : public VisualPlugin
+    class DynamicTerrainVisual : public VisualPlugin
     {
     public:
-        DynamicTerrain() : VisualPlugin()
+        void Load(rendering::VisualPtr /*visual*/, sdf::ElementPtr /*sdf*/)
         {
-        }
-
-        void Load(rendering::VisualPtr visual, sdf::ElementPtr sdf)
-        {
-            // Make sure the ROS node for Gazebo has already been initialized                                                                                    
+            // Make sure the ROS node for Gazebo has already been initialized
             if (!ros::isInitialized())
             {
                 ROS_FATAL_STREAM("A ROS node for Gazebo has not been initialized, unable to load plugin. "
@@ -27,10 +23,10 @@ namespace gazebo
                 return;
             }
 
-            ROS_INFO("DynamicTerrain plugin: successfully loaded!");
+            ROS_INFO("DynamicTerrainVisual: successfully loaded!");
 
             this->post_render_update_connection_ = event::Events::ConnectPostRender(
-                std::bind(&DynamicTerrain::OnUpdate, this));
+                std::bind(&DynamicTerrainVisual::OnUpdate, this));
 
             hole_drilled_ = false;
             timer_.Start();
@@ -45,11 +41,12 @@ namespace gazebo
 
             if (!terrain)
             {
-                ROS_ERROR("DynamicTerrain Plugin: Invalid heightmap");
+                ROS_ERROR("DynamicTerrainVisual: Invalid heightmap");
                 return;
             }
 
             auto size = static_cast<int>(terrain->getSize());
+            ROS_INFO_STREAM("DynamicTerrainVisual: Terrain size " << size);
 
             Ogre::Vector3 heightmap_position;
             terrain->getTerrainPosition(position, &heightmap_position);
@@ -116,7 +113,7 @@ namespace gazebo
 
             if (terrain_group == nullptr)
             {
-                ROS_ERROR("DynamicTerrain plugin: terrain_group is null!");
+                ROS_ERROR("DynamicTerrainVisual: terrain_group is null!");
                 return;
             }
 
@@ -126,11 +123,16 @@ namespace gazebo
 
             if (!hit_result.hit)
             {
-                ROS_INFO("DynamicTerrain plugin: Nothing was hit");
+                ROS_INFO("DynamicTerrainVisual: Nothing was hit");
                 return;
             }
+            else
+            {
+                ROS_INFO_STREAM("DynamicTerrainVisual: hit result ("
+                    << hit_result.position.x << ", " << hit_result.position.y << ")");
+            }
 
-            this->modifyTerrain(heightmap, terrain_group, hit_result.position, 0.003, 0.002, 3.0, "lower");
+            this->modifyTerrain(heightmap, terrain_group, hit_result.position, 0.003, 0.002, 1.0, "lower");
         }
 
         void OnUpdate()
@@ -142,21 +144,21 @@ namespace gazebo
             auto scene = rendering::get_scene();
             if (scene == nullptr)
             {
-                ROS_ERROR("DynamicTerrain plugin: Couldn't acquire scene!");
+                ROS_ERROR("DynamicTerrainVisual: Couldn't acquire scene!");
                 return;
             }
 
             auto heightmap = scene->GetHeightmap();
             if (heightmap == nullptr)
             {
-                ROS_ERROR("DynamicTerrain plugin: scene has no heightmap!");
+                ROS_ERROR("DynamicTerrainVisual: scene has no heightmap!");
                 return;
             }
 
             auto drill_location = Ogre::Vector2(310.0, -275.0);
             drillAt(heightmap, drill_location);
             hole_drilled_ = true;
-            ROS_INFO_STREAM("A hole has been drilled at (" << drill_location.x << ", " << drill_location.y << ")");
+            ROS_INFO_STREAM("DynamicTerrainVisual: A hole has been drilled at (" << drill_location.x << ", " << drill_location.y << ")");
         }
 
     private:
@@ -165,5 +167,5 @@ namespace gazebo
         bool hole_drilled_;
     };
 
-GZ_REGISTER_VISUAL_PLUGIN(DynamicTerrain)
+GZ_REGISTER_VISUAL_PLUGIN(DynamicTerrainVisual)
 }

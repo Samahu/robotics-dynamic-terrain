@@ -1,5 +1,6 @@
 <?xml version="1.0" ?>
 <sdf version="1.4">
+
   <world name="default">
 
     <gui>
@@ -20,9 +21,12 @@
 
     <model name="heightmap">
 
+      <plugin name="dynamic_terrain_model" filename="libdynamic_terrain_model.so" />
+
       <static>true</static>
 
       <link name="terrain-link">
+
         <collision name="collision">
           <geometry>
             <heightmap>
@@ -34,6 +38,7 @@
         </collision>
 
         <visual name="terrain-visual">
+          <plugin name="dynamic_terrain_visual" filename="libdynamic_terrain_visual.so" />
           <geometry>
             <heightmap>
               <texture>
@@ -64,13 +69,12 @@
               <pos>0 0 0</pos>
             </heightmap>
           </geometry>
-
-          <plugin name="dynamic_terrain" filename="libdynamic_terrain.so"/>
-
         </visual>
 
       </link>
+
     </model>
 
   </world>
+
 </sdf>
