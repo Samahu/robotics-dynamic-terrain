@@ -13,7 +13,7 @@ Required Packages:
 
 # usage
 Launch demo world using ```roslaunch dynamic_terrain terrain_world.launch```.  
-To control the husky robot using a keyboard run ```rosrun teleop_twist_keyboard teleop_twist_keyboard.py``` in another terminal.
+To control the husky robot using a keyboard execute ```rosrun teleop_twist_keyboard teleop_twist_keyboard.py``` in another terminal.
 
 # Screenshots
 ![](./misc/scene_initial_state.png)  

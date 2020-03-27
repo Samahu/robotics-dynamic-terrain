@@ -10,6 +10,7 @@
   <arg name="gui" default="true"/>
   <arg name="headless" default="false"/>
   <arg name="debug" default="false"/>
+  <arg name="physics" default="ode"/>
 
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(find dynamic_terrain)/worlds/default.world"/>
@@ -18,6 +19,7 @@
     <arg name="gui" value="$(arg gui)"/>
     <arg name="headless" value="$(arg headless)"/>
     <arg name="debug" value="$(arg debug)"/>
+    <arg name="physics" value="$(arg physics)"/>
   </include>
 
   <include file="$(find husky_gazebo)/launch/spawn_husky.launch">
