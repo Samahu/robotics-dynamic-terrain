@@ -34,10 +34,10 @@ namespace gazebo
 
     private:
         void modifyTerrain(rendering::Heightmap* heightmap,
-            Ogre::TerrainGroup* terrain_group, Ogre::Vector3 position, double outside_radius,
+            Ogre::Vector3 position, double outside_radius,
             double inside_radius, double weight, const std::string& op)
         {
-            auto terrain = terrain_group->getTerrain(0, 0);
+            auto terrain = heightmap->OgreTerrain()->getTerrain(0, 0);
 
             if (!terrain)
             {
@@ -132,7 +132,7 @@ namespace gazebo
                     << hit_result.position.x << ", " << hit_result.position.y << ")");
             }
 
-            this->modifyTerrain(heightmap, terrain_group, hit_result.position, 0.003, 0.002, 1.0, "lower");
+            this->modifyTerrain(heightmap, hit_result.position, 0.003, 0.002, 1.0, "lower");
         }
 
         void OnUpdate()
