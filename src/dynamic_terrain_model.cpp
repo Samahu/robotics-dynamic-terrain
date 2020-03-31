@@ -1,14 +1,20 @@
 #include <gazebo/gazebo.hh>
+
+#include <gazebo/rendering/RenderingIface.hh>
+#include <gazebo/rendering/Scene.hh>
+#include <gazebo/rendering/Heightmap.hh>
+#include <gazebo/rendering/Conversions.hh>
+
 #include <ros/ros.h>
 #include <gazebo/physics/physics.hh>
 #include <gazebo/common/common.hh>
-#include <ignition/math/Vector2.hh>
+#include <ignition/math/Vector3.hh>
 
 namespace gazebo
 {
     class DynamicTerrainModel : public ModelPlugin
     {
-        public: void Load(physics::ModelPtr model, sdf::ElementPtr /*_sdf*/)
+        public: void Load(physics::ModelPtr model, sdf::ElementPtr /*sdf*/)
         {
             // Make sure the ROS node for Gazebo has already been initialized
             if (!ros::isInitialized())
@@ -18,43 +24,55 @@ namespace gazebo
                 return;
             }
 
-            ROS_INFO("DynamicTerrainModel plugin: successfully loaded!");
+            ROS_INFO("DynamicTerrainModel: successfully loaded!");
 
             this->model_ = model;
-            this->post_world_update_connection_ = event::Events::ConnectWorldUpdateBegin(
-                std::bind(&DynamicTerrainModel::OnUpdate, this));
+
+            this->on_update_connection_ = event::Events::ConnectPostRender(
+                std::bind(&DynamicTerrainModel::onUpdate, this));
 
             hole_drilled_ = false;
             timer_.Start();
         }
 
-        void modifyTerrain(physics::HeightmapShapePtr heightmap_shape,
-            ignition::math::Vector2d heightmap_position,
-            double outside_radius, double inside_radius,
-            double weight, const std::string& op)
+        void modifyTerrain(rendering::Heightmap* heightmap, physics::HeightmapShapePtr heightmap_shape,
+            Ogre::Vector3 terrain_position, double outside_radius,
+            double inside_radius, double weight, const std::string& op)
         {
-            auto size = static_cast<int>(heightmap_shape->VertexCount().X());
+            auto terrain = heightmap->OgreTerrain()->getTerrain(0, 0);
+
+            if (!terrain)
+            {
+                ROS_ERROR("DynamicTerrainModel: Invalid heightmap");
+                return;
+            }
+
+            auto size = static_cast<int>(terrain->getSize());
             ROS_INFO_STREAM("DynamicTerrainModel: Terrain size " << size);
 
-            auto left = std::max(int((heightmap_position.X() - outside_radius)), 0);
-            auto top = std::max((int(heightmap_position.Y() - outside_radius)), 0);
-            auto right = std::min(int((heightmap_position.X() + outside_radius)), size);
-            auto bottom = std::min(int((heightmap_position.Y() + outside_radius)), size);
+            Ogre::Vector3 heightmap_position;
+            ROS_INFO_STREAM("DynamicTerrainModel: terrain position  " << terrain_position.x << ", " << terrain_position.y << ", " << terrain_position.z);
+            terrain->getTerrainPosition(terrain_position, &heightmap_position);
+            ROS_INFO_STREAM("DynamicTerrainModel: terrain position  " << heightmap_position.x << ", " << heightmap_position.y << ", " << heightmap_position.z);
+
+            auto left = std::max(int((heightmap_position.x - outside_radius) * size), 0);
+            auto top = std::max((int(heightmap_position.y - outside_radius) * size), 0);
+            auto right = std::min(int((heightmap_position.x + outside_radius) * size), size);
+            auto bottom = std::min(int((heightmap_position.y + outside_radius) * size), size);
+
+            ROS_INFO_STREAM("DynamicTerrainModel: computed bounds " << left << ", " << top << ", " << right << ", " << bottom);
 
             auto average_height = 0.0;
 
-            ROS_INFO_STREAM("DynamicTerrainModel: bounds " << left << ", " << top << ", " << right << ", " << bottom);
-
-            /*
             if (op == "flatten" || op == "smooth")
                 average_height = heightmap->AvgHeight(rendering::Conversions::ConvertIgn(heightmap_position), outside_radius);
-            */
 
-            for (auto y = 0; y <= size; ++y)
-                for (auto x = 0; x <= size; ++x)
+            for (auto y = top; y <= bottom; ++y)
+                for (auto x = left; x <= right; ++x)
                 {
-                    auto ts_x_dist = (x / static_cast<double>(size)) - heightmap_position.X();
-                    auto ts_y_dist = (y / static_cast<double>(size))  - heightmap_position.Y();
+
+                    auto ts_x_dist = (x / static_cast<double>(size)) - heightmap_position.x;
+                    auto ts_y_dist = (y / static_cast<double>(size))  - heightmap_position.y;
                     auto dist = sqrt(ts_y_dist * ts_y_dist + ts_x_dist * ts_x_dist);
 
                     auto inner_weight = 1.0;
@@ -65,7 +83,12 @@ namespace gazebo
                     }
 
                     float added_height = inner_weight * weight;
-                    float new_height = heightmap_shape->GetHeight(x, y);
+
+                    auto xx = x;
+                    auto yy =  heightmap_shape->VertexCount().Y() - y;
+
+                    float new_height = heightmap_shape->GetHeight(xx, yy);
+        
 
                     if (op == "raise")
                         new_height += added_height;
@@ -88,8 +111,35 @@ namespace gazebo
                     else
                         ROS_ERROR_STREAM("Unknown terrain operation[" << op << "]");
 
-                    heightmap_shape->SetHeight(x, y, heightmap_shape->GetHeight(x, y) - 1);
+                    heightmap_shape->SetHeight(xx, yy, new_height);
                 }
+        }
+
+        rendering::Heightmap* getHeightmap()
+        {
+            auto scene = rendering::get_scene();
+            if (!scene)
+            {
+                ROS_ERROR("DynamicTerrainModel: Couldn't acquire scene!");
+                return nullptr;
+            }
+
+            auto heightmap = scene->GetHeightmap();
+            if (heightmap == nullptr)
+            {
+                ROS_ERROR("DynamicTerrainModel: scene has no heightmap!");
+                return nullptr;
+            }
+
+            auto terrain_group = heightmap->OgreTerrain();
+
+            if (terrain_group == nullptr)
+            {
+                ROS_ERROR("DynamicTerrainModel: terrain_group is null!");
+                return nullptr;
+            }
+
+            return heightmap;
         }
 
         physics::HeightmapShapePtr getHeightmapShape()
@@ -120,29 +170,40 @@ namespace gazebo
             return shape;
         }
 
-        void OnUpdate()
+        void drillTerrainAt(double x, double y)
+        {
+            auto heightmap = getHeightmap();
+            if (heightmap == nullptr)
+            {
+                ROS_ERROR("DynamicTerrainModel: Couldn't acquire heightmap!");
+                return;
+            }
+
+            auto heightmap_shape = getHeightmapShape();
+            if (heightmap_shape == nullptr)
+            {
+                ROS_ERROR("DynamicTerrainModel: Couldn't acquire heightmap shape!");
+                return;
+            }
+
+            auto position_xy = Ogre::Vector3(x, y, 0);
+            modifyTerrain(heightmap, heightmap_shape, position_xy, 0.003, 0.002, 1.0, "lower");
+            hole_drilled_ = true;
+            ROS_INFO_STREAM("DynamicTerrainModel: A hole has been drilled at (" << position_xy.x << ", " << position_xy.y << ")");
+        }
+
+        void onUpdate()
         {
             // Only continue if a second has elapsed
             if (timer_.GetElapsed().Double() < 10.0 || hole_drilled_)
                 return;
 
-            auto drill_location = ignition::math::Vector2d(300, -275);
-            auto heightmapShape = getHeightmapShape();
-            if (heightmapShape == nullptr)
-            {
-                ROS_INFO("DynamicTerrainModel: Couldn't acquire heightmap shape!");
-                return;
-            }
-
-            modifyTerrain(heightmapShape, drill_location, 10, 5, 2.0, "lower");
-            hole_drilled_ = true;
-            ROS_INFO_STREAM("DynamicTerrainModel: A hole has been drilled at (" << drill_location.X() << ", " << drill_location.Y() << ")");
-
+            drillTerrainAt(310.0, -275.0);
         }
 
     private:
         physics::ModelPtr model_;
-        event::ConnectionPtr post_world_update_connection_;
+        event::ConnectionPtr on_update_connection_;
         common::Timer timer_;
         bool hole_drilled_;
     };
