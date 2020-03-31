@@ -54,7 +54,7 @@ namespace gazebo
             ROS_INFO_STREAM("DynamicTerrainVisual: terrain position  " << heightmap_position.x << ", " << heightmap_position.y << ", " << heightmap_position.z);
 
             auto left = std::max(int((heightmap_position.x - outside_radius) * size), 0);
-            auto top = std::max((int(heightmap_position.y - outside_radius) * size), 0);
+            auto top = std::max(int((heightmap_position.y - outside_radius) * size), 0);
             auto right = std::min(int((heightmap_position.x + outside_radius) * size), size);
             auto bottom = std::min(int((heightmap_position.y + outside_radius) * size), size);
 

@@ -18,3 +18,5 @@ To control the husky robot using a keyboard run ```rosrun teleop_twist_keyboard 
 # Screenshots
 ![](./misc/scene_initial_state.png)  
 ![](./misc/scene_terrain_modified.png)
+![](./misc/scene_terrain_collision_updated.png)  
+![](./misc/scene_terrain_collision_updated_husky_moved.png)
