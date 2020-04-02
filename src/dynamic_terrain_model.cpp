@@ -70,6 +70,8 @@ namespace gazebo
             for (auto y = top; y <= bottom; ++y)
                 for (auto x = left; x <= right; ++x)
                 {
+                    auto xx = x;
+                    auto yy = heightmap_shape->VertexCount().Y() - y - 1;
 
                     auto ts_x_dist = (x / static_cast<double>(size)) - heightmap_position.x;
                     auto ts_y_dist = (y / static_cast<double>(size))  - heightmap_position.y;
@@ -83,10 +85,6 @@ namespace gazebo
                     }
 
                     float added_height = inner_weight * weight;
-
-                    auto xx = x;
-                    auto yy =  heightmap_shape->VertexCount().Y() - y;
-
                     float new_height = heightmap_shape->GetHeight(xx, yy);
         
 

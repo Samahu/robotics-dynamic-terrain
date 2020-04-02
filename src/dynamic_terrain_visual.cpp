@@ -1,6 +1,6 @@
 #include <gazebo/common/Plugin.hh>
 #include <ros/ros.h>
-#include<gazebo/common/common.hh>
+#include <gazebo/common/common.hh>
 #include <OgreVector2.h>
 #include <OgreVector3.h>
 #include <gazebo/rendering/RenderingIface.hh>
