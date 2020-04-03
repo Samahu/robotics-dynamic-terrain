@@ -16,14 +16,14 @@ namespace gazebo
         void Load(rendering::VisualPtr /*visual*/, sdf::ElementPtr /*sdf*/)
         {
             // Make sure the ROS node for Gazebo has already been initialized
-            if (!ros::isInitialized())
-            {
-                ROS_FATAL_STREAM("A ROS node for Gazebo has not been initialized, unable to load plugin. "
-                    << "Load the Gazebo system plugin 'libgazebo_ros_api_plugin.so' in the gazebo_ros package)");
-                return;
-            }
+            // if (!ros::isInitialized())
+            // {
+            //     ROS_FATAL_STREAM("A ROS node for Gazebo has not been initialized, unable to load plugin. "
+            //         << "Load the Gazebo system plugin 'libgazebo_ros_api_plugin.so' in the gazebo_ros package)" << std::endl;
+            //     return;
+            // }
 
-            ROS_INFO("DynamicTerrainVisual: successfully loaded!");
+            gzlog << "DynamicTerrainVisual: successfully loaded!" << std::endl;
 
             this->post_render_update_connection_ = event::Events::ConnectPostRender(
                 std::bind(&DynamicTerrainVisual::onUpdate, this));
@@ -41,30 +41,37 @@ namespace gazebo
 
             if (!terrain)
             {
-                ROS_ERROR("DynamicTerrainVisual: Invalid heightmap");
+                gzerr << "DynamicTerrainVisual: Invalid heightmap" << std::endl;
                 return;
             }
 
             auto size = static_cast<int>(terrain->getSize());
-            ROS_INFO_STREAM("DynamicTerrainVisual: Terrain size " << size);
+            gzlog << "DynamicTerrainVisual: Terrain size " << size << std::endl;
 
             Ogre::Vector3 heightmap_position;
-            ROS_INFO_STREAM("DynamicTerrainVisual: terrain position  " << terrain_position.x << ", " << terrain_position.y << ", " << terrain_position.z);
+            gzlog << "DynamicTerrainVisual: terrain position  "
+                << terrain_position.x << ", " << terrain_position.y << ", " << terrain_position.z << std::endl;
             terrain->getTerrainPosition(terrain_position, &heightmap_position);
-            ROS_INFO_STREAM("DynamicTerrainVisual: terrain position  " << heightmap_position.x << ", " << heightmap_position.y << ", " << heightmap_position.z);
+            gzlog << "DynamicTerrainVisual: terrain position  "
+                << heightmap_position.x << ", " << heightmap_position.y << ", " << heightmap_position.z << std::endl;
 
             auto left = std::max(int((heightmap_position.x - outside_radius) * size), 0);
             auto top = std::max(int((heightmap_position.y - outside_radius) * size), 0);
             auto right = std::min(int((heightmap_position.x + outside_radius) * size), size);
             auto bottom = std::min(int((heightmap_position.y + outside_radius) * size), size);
 
-            ROS_INFO_STREAM("DynamicTerrainVisual: computed bounds " << left << ", " << top << ", " << right << ", " << bottom);
+            gzlog << "DynamicTerrainVisual: computed bounds "
+                << left << ", " << top << ", " << right << ", " << bottom << std::endl;
             auto average_height = 0.0;
 
             if (op == "flatten" || op == "smooth")
                 average_height = heightmap->AvgHeight(rendering::Conversions::ConvertIgn(heightmap_position), outside_radius);
 
+            std::string original;
+            std::string updated;
+
             for (auto y = top; y <= bottom; ++y)
+            {
                 for (auto x = left; x <= right; ++x)
                 {
                     auto ts_x_dist = (x / static_cast<double>(size)) - heightmap_position.x;
@@ -101,10 +108,25 @@ namespace gazebo
                             new_height -= added_height;
                     }
                     else
-                        ROS_ERROR_STREAM("Unknown terrain operation[" << op << "]");
+                        gzerr << "Unknown terrain operation[" << op << "]" << std::endl;
+
+                    // gzlog << "DynamicTerrainVisual: p(" << (x-left) << ", " << (y-top) << "): "
+                    //  << terrain->getHeightAtPoint(x, y) << " -> " << new_height << std::endl;
+                    original += std::to_string(terrain->getHeightAtPoint(x, y));
+                    original += " ";
+
+                    updated += std::to_string(new_height);
+                    updated += " ";
 
                     terrain->setHeightAtPoint(x, y, new_height);
                 }
+
+                original += "\n";
+                updated += "\n";
+            }
+
+            gzlog << "DynamicTerrainVisual: ORIGINAL\n" << original << std::endl;
+            gzlog << "DynamicTerrainVisual: UPDATED\n" << updated << std::endl;
 
             terrain->dirty();
             terrain->update();
@@ -115,14 +137,14 @@ namespace gazebo
             auto scene = rendering::get_scene();
             if (!scene)
             {
-                ROS_ERROR("DynamicTerrainVisual: Couldn't acquire scene!");
+                gzerr << "DynamicTerrainVisual: Couldn't acquire scene!" << std::endl;
                 return nullptr;
             }
 
             auto heightmap = scene->GetHeightmap();
             if (heightmap == nullptr)
             {
-                ROS_ERROR("DynamicTerrainVisual: scene has no heightmap!");
+                gzerr << "DynamicTerrainVisual: scene has no heightmap!" << std::endl;
                 return nullptr;
             }
 
@@ -130,7 +152,7 @@ namespace gazebo
 
             if (terrain_group == nullptr)
             {
-                ROS_ERROR("DynamicTerrainVisual: terrain_group is null!");
+                gzerr << "DynamicTerrainVisual: terrain_group is null!" << std::endl;
                 return nullptr;
             }
 
@@ -142,7 +164,7 @@ namespace gazebo
             auto heightmap = getHeightmap();
             if (heightmap == nullptr)
             {
-                ROS_ERROR("DynamicTerrainVisual: Couldn't acquire heightmap!");
+                gzerr << "DynamicTerrainVisual: Couldn't acquire heightmap!" << std::endl;
                 return;
             }
 
@@ -150,7 +172,7 @@ namespace gazebo
             auto heightmap_shape = getHeightmapShape();
             if (heightmap_shape == nullptr)
             {
-                ROS_ERROR("DynamicTerrainVisual: Couldn't acquire heightmap shape!");
+                gzerr << "DynamicTerrainVisual: Couldn't acquire heightmap shape!" << std::endl;
                 return;
             }
             */
@@ -158,7 +180,8 @@ namespace gazebo
             auto position_xy = Ogre::Vector3(x, y, 0);
             modifyTerrain(heightmap, nullptr, position_xy, 0.003, 0.002, 1.0, "lower");
             hole_drilled_ = true;
-            ROS_INFO_STREAM("DynamicTerrainVisual: A hole has been drilled at (" << position_xy.x << ", " << position_xy.y << ")");
+            gzlog << "DynamicTerrainVisual: A hole has been drilled at ("
+                << position_xy.x << ", " << position_xy.y << ")" << std::endl;
         }
 
         void onUpdate()
