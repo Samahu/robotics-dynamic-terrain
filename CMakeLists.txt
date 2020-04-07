@@ -17,8 +17,8 @@ find_package(catkin REQUIRED COMPONENTS
     roscpp
 )
 
-include (FindPkgConfig)
-if (PKG_CONFIG_FOUND)
+include(FindPkgConfig)
+if(PKG_CONFIG_FOUND)
   pkg_check_modules(GAZEBO gazebo)
   pkg_check_modules(OGRE OGRE)
   pkg_check_modules(OGRE-Terrain OGRE-Terrain)
@@ -147,11 +147,6 @@ include_directories(
     ${catkin_INCLUDE_DIRS}
 )
 
-## Declare a C++ library
-add_library(${PROJECT_NAME}
-    src/dynamic_terrain.cpp
-)
-
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
@@ -172,8 +167,22 @@ add_library(${PROJECT_NAME}
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME}
+## Model Plugin
+add_library(${PROJECT_NAME}_model
+    src/modify_terrain.cpp src/dynamic_terrain_model.cpp
+)
+
+target_link_libraries(${PROJECT_NAME}_model
+   ${catkin_LIBRARIES}
+   ${GAZEBO_LIBRARIES}
+)
+
+## Visual Plugin
+add_library(${PROJECT_NAME}_visual
+    src/modify_terrain.cpp src/dynamic_terrain_visual.cpp
+)
+
+target_link_libraries(${PROJECT_NAME}_visual
    ${catkin_LIBRARIES}
    ${GAZEBO_LIBRARIES}
 )
