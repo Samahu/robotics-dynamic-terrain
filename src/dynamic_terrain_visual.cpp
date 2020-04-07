@@ -54,9 +54,6 @@ namespace gazebo
             if (op == "flatten" || op == "smooth")
                 average_height = heightmap->AvgHeight(rendering::Conversions::ConvertIgn(heightmap_position), outside_radius);
 
-            std::string original;
-            std::string updated;
-
             for (auto y = top; y <= bottom; ++y)
             {
                 for (auto x = left; x <= right; ++x)
