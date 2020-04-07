@@ -2,6 +2,8 @@
 # introduction
 A demo of dynamic terrain within ROS/Gazebo environment
 
+![](./misc/scene_dynamic_terrain_no_smooth_1.gif) ![](./misc/scene_dynamic_terrain_no_smooth_2.gif)
+
 # requirements
 
 ROS distro: melodic  
@@ -14,9 +16,3 @@ Required Packages:
 # usage
 Launch demo world using ```roslaunch dynamic_terrain terrain_world.launch```.  
 To control the husky robot using a keyboard execute ```rosrun teleop_twist_keyboard teleop_twist_keyboard.py``` in another terminal.
-
-# Screenshots
-![](./misc/scene_initial_state.png)  
-![](./misc/scene_terrain_modified.png)
-![](./misc/scene_terrain_collision_updated.png)  
-![](./misc/scene_terrain_collision_updated_husky_moved.png)
