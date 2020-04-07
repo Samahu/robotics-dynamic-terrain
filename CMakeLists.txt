@@ -169,7 +169,7 @@ include_directories(
 
 ## Model Plugin
 add_library(${PROJECT_NAME}_model
-    src/dynamic_terrain_model.cpp
+    src/modify_terrain.cpp src/dynamic_terrain_model.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_model
@@ -179,7 +179,7 @@ target_link_libraries(${PROJECT_NAME}_model
 
 ## Visual Plugin
 add_library(${PROJECT_NAME}_visual
-    src/dynamic_terrain_visual.cpp
+    src/modify_terrain.cpp src/dynamic_terrain_visual.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_visual

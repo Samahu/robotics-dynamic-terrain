@@ -1,14 +1,7 @@
 #include <gazebo/gazebo.hh>
-
-#include <gazebo/rendering/RenderingIface.hh>
-#include <gazebo/rendering/Scene.hh>
-#include <gazebo/rendering/Heightmap.hh>
-#include <gazebo/rendering/Conversions.hh>
-
-#include <ros/ros.h>
-#include <gazebo/physics/physics.hh>
 #include <gazebo/common/common.hh>
-#include <ignition/math/Vector3.hh>
+#include <gazebo/physics/physics.hh>
+#include "modify_terrain.h"
 
 namespace gazebo
 {
@@ -25,82 +18,6 @@ namespace gazebo
 
             hole_drilled_ = false;
             timer_.Start();
-        }
-
-        void modifyTerrain(rendering::Heightmap* heightmap, physics::HeightmapShapePtr heightmap_shape,
-            Ogre::Vector3 terrain_position, double outside_radius,
-            double inside_radius, double weight, const std::string& op)
-        {
-            auto terrain = heightmap->OgreTerrain()->getTerrain(0, 0);
-
-            if (!terrain)
-            {
-                gzerr << "DynamicTerrainModel: Invalid heightmap" << std::endl;
-                return;
-            }
-
-            auto size = static_cast<int>(terrain->getSize());
-            gzlog << "DynamicTerrainModel: Terrain size " << size << std::endl;
-
-            Ogre::Vector3 heightmap_position;
-            terrain->getTerrainPosition(terrain_position, &heightmap_position);
-
-            auto left = std::max(int((heightmap_position.x - outside_radius) * size), 0);
-            auto top = std::max(int((heightmap_position.y - outside_radius) * size), 0);
-            auto right = std::min(int((heightmap_position.x + outside_radius) * size), size);
-            auto bottom = std::min(int((heightmap_position.y + outside_radius) * size), size);
-
-            auto average_height = 0.0;
-
-            if (op == "flatten" || op == "smooth")
-                average_height = heightmap->AvgHeight(rendering::Conversions::ConvertIgn(heightmap_position), outside_radius);
-
-            for (auto y = top; y <= bottom; ++y)
-            {
-                for (auto x = left; x <= right; ++x)
-                {
-                    auto xx = x;
-                    auto yy = heightmap_shape->VertexCount().Y() - y - 1;
-
-                    auto ts_x_dist = (x / static_cast<double>(size)) - heightmap_position.x;
-                    auto ts_y_dist = (y / static_cast<double>(size))  - heightmap_position.y;
-                    auto dist = sqrt(ts_y_dist * ts_y_dist + ts_x_dist * ts_x_dist);
-
-                    auto inner_weight = 1.0;
-                    if (dist > inside_radius)
-                    {
-                        inner_weight = ignition::math::clamp(dist / outside_radius, 0.0, 1.0);
-                        inner_weight = 1.0 - (inner_weight * inner_weight);
-                    }
-
-                    float added_height = inner_weight * weight;
-                    float new_height = heightmap_shape->GetHeight(xx, yy);
-        
-
-                    if (op == "raise")
-                        new_height += added_height;
-                    else if (op == "lower")
-                        new_height -= added_height;
-                    else if (op == "flatten")
-                    {
-                        if (new_height < average_height)
-                            new_height += added_height;
-                        else
-                            new_height -= added_height;
-                    }
-                    else if (op == "smooth")
-                    {
-                        if (new_height < average_height)
-                            new_height += added_height;
-                        else
-                            new_height -= added_height;
-                    }
-                    else
-                        gzerr << "Unknown terrain operation[" << op << "]" << std::endl;
-
-                    heightmap_shape->SetHeight(xx, yy, new_height);
-                }
-            }
         }
 
         rendering::Heightmap* getHeightmap()
@@ -175,7 +92,12 @@ namespace gazebo
             }
 
             auto position_xy = Ogre::Vector3(x, y, 0);
-            modifyTerrain(heightmap, heightmap_shape, position_xy, 0.003, 0.002, 1.0, "lower");
+            
+            ModifyTerrain::modify(heightmap, position_xy, 0.003, 0.002, 1.0, "lower",
+                [&heightmap_shape](int x, int y) { return heightmap_shape->GetHeight(x, heightmap_shape->VertexCount().Y() - y - 1); },
+                [&heightmap_shape](int x, int y, float value) { heightmap_shape->SetHeight(x, heightmap_shape->VertexCount().Y() - y - 1, value); }
+            );
+
             hole_drilled_ = true;
             gzlog << "DynamicTerrainModel: A hole has been drilled at ("
                 << position_xy.x << ", " << position_xy.y << ")" << std::endl;
