@@ -11,5 +11,6 @@ public:
         Ogre::Vector3 terrain_position,
         double outside_radius, double inside_radius, double weight,
         const std::string& op,
-        std::function<float (long, long)> get_height_value, std::function<void (long, long, float)> set_height_value);
+        std::function<float (long, long)> get_height_value,
+        std::function<void (long, long, float)> set_height_value);
 };

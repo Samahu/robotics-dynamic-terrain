@@ -10,38 +10,35 @@ void ModifyTerrain::modify(Heightmap* heightmap,
         Vector3 terrain_position,
         double outside_radius, double inside_radius, double weight,
         const string& op,
-        function<float (long, long)> get_height_value, function<void (long, long, float)> set_height_value)
+        function<float (long, long)> get_height_value,
+        function<void (long, long, float)> set_height_value)
 {
     auto terrain = heightmap->OgreTerrain()->getTerrain(0, 0);
 
     if (!terrain)
     {
-        gzerr << "DynamicTerrain: Invalid heightmap" << endl;
+        gzerr << "DynamicTerrain: Heightmap has no associated terrain object!" << endl;
         return;
     }
-
-    auto size = static_cast<int>(terrain->getSize());
-    gzlog << "DynamicTerrain: Terrain size " << size << endl;
 
     Vector3 heightmap_position;
     terrain->getTerrainPosition(terrain_position, &heightmap_position);
 
+    auto size = static_cast<int>(terrain->getSize());
     auto left = max(int((heightmap_position.x - outside_radius) * size), 0);
     auto top = max(int((heightmap_position.y - outside_radius) * size), 0);
     auto right = min(int((heightmap_position.x + outside_radius) * size), size);
     auto bottom = min(int((heightmap_position.y + outside_radius) * size), size);
 
-    auto average_height = 0.0;
-
-    if (op == "flatten" || op == "smooth")
-        average_height = heightmap->AvgHeight(Conversions::ConvertIgn(heightmap_position), outside_radius);
+    auto average_height = op == "flatten" || op == "smooth" ?
+        heightmap->AvgHeight(Conversions::ConvertIgn(heightmap_position), outside_radius) :
+        0.0;
 
     for (auto y = top; y <= bottom; ++y)
-    {
         for (auto x = left; x <= right; ++x)
         {
-            auto ts_x_dist = (x / static_cast<double>(size)) - heightmap_position.x;
-            auto ts_y_dist = (y / static_cast<double>(size))  - heightmap_position.y;
+            auto ts_x_dist = x / static_cast<double>(size) - heightmap_position.x;
+            auto ts_y_dist = y / static_cast<double>(size)  - heightmap_position.y;
             auto dist = sqrt(ts_y_dist * ts_y_dist + ts_x_dist * ts_x_dist);
 
             auto inner_weight = 1.0;
@@ -77,5 +74,4 @@ void ModifyTerrain::modify(Heightmap* heightmap,
 
             set_height_value(x, y, new_height);
         }
-    }
 }
