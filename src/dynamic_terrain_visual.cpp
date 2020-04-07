@@ -16,14 +16,6 @@ namespace gazebo
     public:
         void Load(rendering::VisualPtr /*visual*/, sdf::ElementPtr /*sdf*/)
         {
-            // Make sure the ROS node for Gazebo has already been initialized
-            // if (!ros::isInitialized())
-            // {
-            //     ROS_FATAL_STREAM("A ROS node for Gazebo has not been initialized, unable to load plugin. "
-            //         << "Load the Gazebo system plugin 'libgazebo_ros_api_plugin.so' in the gazebo_ros package)" << std::endl;
-            //     return;
-            // }
-
             gzlog << "DynamicTerrainVisual: successfully loaded!" << std::endl;
 
             this->post_render_update_connection_ = event::Events::ConnectPostRender(
@@ -50,19 +42,13 @@ namespace gazebo
             gzlog << "DynamicTerrainVisual: Terrain size " << size << std::endl;
 
             Ogre::Vector3 heightmap_position;
-            gzlog << "DynamicTerrainVisual: terrain position  "
-                << terrain_position.x << ", " << terrain_position.y << ", " << terrain_position.z << std::endl;
             terrain->getTerrainPosition(terrain_position, &heightmap_position);
-            gzlog << "DynamicTerrainVisual: terrain position  "
-                << heightmap_position.x << ", " << heightmap_position.y << ", " << heightmap_position.z << std::endl;
-
+            
             auto left = std::max(int((heightmap_position.x - outside_radius) * size), 0);
             auto top = std::max(int((heightmap_position.y - outside_radius) * size), 0);
             auto right = std::min(int((heightmap_position.x + outside_radius) * size), size);
             auto bottom = std::min(int((heightmap_position.y + outside_radius) * size), size);
 
-            gzlog << "DynamicTerrainVisual: computed bounds "
-                << left << ", " << top << ", " << right << ", " << bottom << std::endl;
             auto average_height = 0.0;
 
             if (op == "flatten" || op == "smooth")
@@ -111,27 +97,14 @@ namespace gazebo
                     else
                         gzerr << "Unknown terrain operation[" << op << "]" << std::endl;
 
-                    // gzlog << "DynamicTerrainVisual: p(" << (x-left) << ", " << (y-top) << "): "
-                    //  << terrain->getHeightAtPoint(x, y) << " -> " << new_height << std::endl;
-                    original += std::to_string(terrain->getHeightAtPoint(x, y));
-                    original += " ";
-
-                    updated += std::to_string(new_height);
-                    updated += " ";
-
                     terrain->setHeightAtPoint(x, y, new_height);
                 }
-
-                original += "\n";
-                updated += "\n";
             }
-
-            gzlog << "DynamicTerrainVisual: ORIGINAL\n" << original << std::endl;
-            gzlog << "DynamicTerrainVisual: UPDATED\n" << updated << std::endl;
 
             terrain->dirty();
             terrain->updateGeometry();
-            terrain->updateDerivedData(false, Ogre::Terrain::DERIVED_DATA_NORMALS | Ogre::Terrain::DERIVED_DATA_LIGHTMAP);
+            terrain->updateDerivedData(false,
+                Ogre::Terrain::DERIVED_DATA_NORMALS | Ogre::Terrain::DERIVED_DATA_LIGHTMAP);
         }
 
         rendering::Heightmap* getHeightmap()
@@ -169,15 +142,6 @@ namespace gazebo
                 gzerr << "DynamicTerrainVisual: Couldn't acquire heightmap!" << std::endl;
                 return;
             }
-
-            /*
-            auto heightmap_shape = getHeightmapShape();
-            if (heightmap_shape == nullptr)
-            {
-                gzerr << "DynamicTerrainVisual: Couldn't acquire heightmap shape!" << std::endl;
-                return;
-            }
-            */
 
             auto position_xy = Ogre::Vector3(x, y, 0);
             modifyTerrain(heightmap, nullptr, position_xy, 0.003, 0.002, 1.0, "lower");

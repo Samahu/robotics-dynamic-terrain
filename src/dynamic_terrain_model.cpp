@@ -16,14 +16,6 @@ namespace gazebo
     {
         public: void Load(physics::ModelPtr model, sdf::ElementPtr /*sdf*/)
         {
-            // Make sure the ROS node for Gazebo has already been initialized
-            // if (!ros::isInitialized())
-            // {
-            //     ROS_FATAL_STREAM("A ROS node for Gazebo has not been initialized, unable to load plugin. "
-            //         << "Load the Gazebo system plugin 'libgazebo_ros_api_plugin.so' in the gazebo_ros package)");
-            //     return;
-            // }
-
             gzlog << "DynamicTerrainModel: successfully loaded!" << std::endl;
 
             this->model_ = model;
@@ -53,18 +45,10 @@ namespace gazebo
             Ogre::Vector3 heightmap_position;
             terrain->getTerrainPosition(terrain_position, &heightmap_position);
 
-            gzlog << "DynamicTerrainModel: terrain position  "
-                << terrain_position.x << ", " << terrain_position.y << ", " << terrain_position.z << std::endl;
-            gzlog << "DynamicTerrainModel: terrain position  "
-                << heightmap_position.x << ", " << heightmap_position.y << ", " << heightmap_position.z << std::endl;
-
             auto left = std::max(int((heightmap_position.x - outside_radius) * size), 0);
             auto top = std::max(int((heightmap_position.y - outside_radius) * size), 0);
             auto right = std::min(int((heightmap_position.x + outside_radius) * size), size);
             auto bottom = std::min(int((heightmap_position.y + outside_radius) * size), size);
-
-            gzlog << "DynamicTerrainModel: computed bounds "
-                << left << ", " << top << ", " << right << ", " << bottom << std::endl;
 
             auto average_height = 0.0;
 
@@ -117,23 +101,9 @@ namespace gazebo
                     else
                         gzerr << "Unknown terrain operation[" << op << "]" << std::endl;
 
-                    // gzlog << "DynamicTerrainModel: p(" << (x-left) << ", " << (y-top) << "): "
-                    //    << heightmap_shape->GetHeight(xx, yy) << " -> " << new_height << std::endl;
-                    original += std::to_string(heightmap_shape->GetHeight(xx, yy));
-                    original += " ";
-
-                    updated += std::to_string(new_height);
-                    updated += " ";
-
                     heightmap_shape->SetHeight(xx, yy, new_height);
                 }
-
-                original += "\n";
-                updated += "\n";
             }
-
-            gzlog << "DynamicTerrainModel: ORIGINAL\n" << original << std::endl;
-            gzlog << "DynamicTerrainModel: UPDATED\n" << updated << std::endl;
         }
 
         rendering::Heightmap* getHeightmap()
