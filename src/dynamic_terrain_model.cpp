@@ -1,6 +1,7 @@
 #include <gazebo/common/common.hh>
 #include <gazebo/physics/physics.hh>
 #include "modify_terrain.h"
+#include "shared_constants.h"
 
 using namespace gazebo;
 
@@ -16,7 +17,7 @@ class DynamicTerrainModel : public ModelPlugin
             std::bind(&DynamicTerrainModel::onUpdate, this));
 
         hole_drilled_ = false;
-        timer_.Start();
+        plugin_load_time_ = gazebo::common::Time::GetWallTime();
     }
 
     rendering::Heightmap* getHeightmap()
@@ -96,18 +97,20 @@ class DynamicTerrainModel : public ModelPlugin
 
     void onUpdate()
     {
-        // Only continue if a second has elapsed
-        if (timer_.GetElapsed().Double() < 10.0 || hole_drilled_)
+        if (gazebo::common::Time::GetWallTime().sec - plugin_load_time_.sec < SharedConstants::WARM_UP_PERIOD_IN_SECONDS)
             return;
 
-        drillTerrainAt(310.0, -275.0);
+        if (hole_drilled_ || gazebo::common::Time::GetWallTime().sec % 10 != 0)
+            return;
+
+        drillTerrainAt(SharedConstants::DRILL_POINT_X, SharedConstants::DRILL_POINT_Y);
     }
 
 private:
     physics::ModelPtr model_;
     event::ConnectionPtr on_update_connection_;
-    common::Timer timer_;
     bool hole_drilled_;
+    common::Time plugin_load_time_;
 };
 
 // Register this plugin with the simulator
