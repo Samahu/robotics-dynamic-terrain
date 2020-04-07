@@ -1,12 +1,13 @@
 #include <gazebo/common/Plugin.hh>
 #include <ros/ros.h>
 #include <gazebo/common/common.hh>
-#include <OgreVector2.h>
-#include <OgreVector3.h>
 #include <gazebo/rendering/RenderingIface.hh>
 #include <gazebo/rendering/Scene.hh>
 #include <gazebo/rendering/Heightmap.hh>
 #include <gazebo/rendering/Conversions.hh>
+#include <OgreVector2.h>
+#include <OgreVector3.h>
+#include <OgreTerrain.h>
 
 namespace gazebo
 {
@@ -129,7 +130,8 @@ namespace gazebo
             gzlog << "DynamicTerrainVisual: UPDATED\n" << updated << std::endl;
 
             terrain->dirty();
-            terrain->update();
+            terrain->updateGeometry();
+            terrain->updateDerivedData(false, Ogre::Terrain::DERIVED_DATA_NORMALS | Ogre::Terrain::DERIVED_DATA_LIGHTMAP);
         }
 
         rendering::Heightmap* getHeightmap()
