@@ -25,7 +25,6 @@
     <arg name="debug" value="$(arg debug)"/>
   </include>
 
-  <!--
   <include file="$(find husky_gazebo)/launch/spawn_husky.launch">
     <arg name="x" default="310"/>
     <arg name="y" default="-275"/>
@@ -34,7 +33,6 @@
     <arg name="laser_enabled" value="false"/>
     <arg name="kinect_enabled" value="true"/>
   </include>
-  -->
 
   <!-- Show in Rviz   -->
   <!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find dynamic_terrain)/launch/husky.rviz"/> -->
