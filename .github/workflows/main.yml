@@ -1,0 +1,6 @@
+- name: Setup catkin
+  uses: betwo/github-setup-catkin@v1.0.0
+  with:
+    # Version range or exact version of ROS version to use, using SemVer's version range syntax.
+    ros-version: melodic
+    workspace: # optional
