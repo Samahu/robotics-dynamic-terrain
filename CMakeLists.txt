@@ -9,12 +9,10 @@ add_compile_options(-std=c++11)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-    message_generation
-    geometry_msgs
-    std_msgs
-    actionlib
-    move_base_msgs
-    roscpp
+  roscpp
+  message_generation
+  std_msgs
+  geometry_msgs
 )
 
 include(FindPkgConfig)
@@ -24,14 +22,21 @@ if(PKG_CONFIG_FOUND)
   pkg_check_modules(OGRE-Terrain OGRE-Terrain)
 endif()
 
+## Specify additional locations of header files
+## Your package locations should be listed before other locations
 include_directories(
-    ${Boost_INCLUDE_DIR}
-    ${catkin_INCLUDE_DIRS}
-    ${GAZEBO_INCLUDE_DIRS}
-    ${OGRE-Terrain_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIR}
+  ${catkin_INCLUDE_DIRS}
+  ${GAZEBO_INCLUDE_DIRS}
+  ${OGRE-Terrain_INCLUDE_DIRS}
 )
 
-link_directories(${GAZEBO_LIBRARY_DIRS})
+link_directories(
+  ${Boost_LIBRARY_DIR}
+  ${catkin_LIBRARY_DIRS}
+  ${GAZEBO_LIBRARY_DIRS}
+  ${OGRE-Terrain_LIBRARY_DIRS}
+)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -92,13 +97,6 @@ link_directories(${GAZEBO_LIBRARY_DIRS})
 #   DEPENDENCIES
 #   std_msgs  # Or other packages containing msgs
 # )
-
-generate_messages(
-    DEPENDENCIES
-    std_msgs
-    geometry_msgs
-    move_base_msgs
-)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
