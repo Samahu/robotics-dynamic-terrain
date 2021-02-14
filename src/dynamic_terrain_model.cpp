@@ -67,6 +67,19 @@ class DynamicTerrainModel : public ModelPlugin
         return shape;
     }
 
+    static inline float getHeightInWorldCoords(const physics::HeightmapShapePtr& heightmap_shape, int x, int y)
+    {
+        auto value = heightmap_shape->GetHeight(x, heightmap_shape->VertexCount().Y() - y - 1);
+        value += heightmap_shape->Pos().Z();
+        return value;
+    }
+
+    static inline void setHeightFromWorldCoords(const physics::HeightmapShapePtr& heightmap_shape, int x, int y, float value)
+    {
+        value -= heightmap_shape->Pos().Z();
+        heightmap_shape->SetHeight(x, heightmap_shape->VertexCount().Y() - y - 1, value);
+    }
+
     void drillTerrainAt(double x, double y)
     {
         auto heightmap = getHeightmap();
@@ -86,8 +99,8 @@ class DynamicTerrainModel : public ModelPlugin
         auto position_xy = Ogre::Vector3(x, y, 0);
         
         ModifyTerrain::modify(heightmap, position_xy, 0.003, 0.002, 1.0, "lower",
-            [&heightmap_shape](int x, int y) { return heightmap_shape->GetHeight(x, heightmap_shape->VertexCount().Y() - y - 1); },
-            [&heightmap_shape](int x, int y, float value) { heightmap_shape->SetHeight(x, heightmap_shape->VertexCount().Y() - y - 1, value); }
+            [&heightmap_shape](int x, int y) { return getHeightInWorldCoords(heightmap_shape, x, y); },
+            [&heightmap_shape](int x, int y, float value) { setHeightFromWorldCoords(heightmap_shape, x, y, value); }
         );
 
         hole_drilled_ = true;
