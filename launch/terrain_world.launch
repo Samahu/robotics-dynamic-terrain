@@ -31,7 +31,6 @@
     <arg name="z" default="0.5"/>
     <arg name="yaw" default="0.0"/>
     <arg name="laser_enabled" value="false"/>
-    <arg name="kinect_enabled" value="true"/>
   </include>
 
   <!-- Show in Rviz   -->
