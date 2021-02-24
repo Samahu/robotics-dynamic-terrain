@@ -3,6 +3,7 @@
 * [Introduction](#introduction)
 * [Requirements](#requirements)
 * [Usage](#usage)
+* [Demo](#demo)
 
 ## Introduction
 A demo of dynamic terrain within ROS/Gazebo environment
@@ -21,3 +22,7 @@ A demo of dynamic terrain within ROS/Gazebo environment
 ## Usage
 Launch demo world using ```roslaunch dynamic_terrain terrain_world.launch```.  
 To control the husky robot using a keyboard execute ```rosrun teleop_twist_keyboard teleop_twist_keyboard.py``` in another terminal.
+
+## Demo
+Click the image to view the plugin in action
+[![](./misc/oceanwaters-deformable-terrain.png)](https://www.youtube.com/watch?v=owiQa95QXVU)
